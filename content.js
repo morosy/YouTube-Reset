@@ -7,12 +7,14 @@
         if (!DEBUG) {
             return;
         }
-        // eslint-disable-next-line no-console
-        console.log('[YouTube-Reload]', ...args);
+        console.log('[YouTube-Reset]', ...args);
     };
 
     let lastHandledUrl = '';
     let pendingTimerId = null;
+
+    const TOAST_ID = 'ytr-toast';
+    const TOAST_DURATION_MS = 2000;
 
     const isWatchUrl = (url) => {
         try {
@@ -36,6 +38,41 @@
         return null;
     };
 
+    const ensureToastElement = () => {
+        let el = document.getElementById(TOAST_ID);
+        if (el) {
+            return el;
+        }
+
+        el = document.createElement('div');
+        el.id = TOAST_ID;
+        el.className = 'ytr-toast';
+        el.setAttribute('role', 'status');
+        el.setAttribute('aria-live', 'polite');
+        document.documentElement.appendChild(el);
+
+        return el;
+    };
+
+    const showToast = (message) => {
+        const el = ensureToastElement();
+
+        el.textContent = message;
+
+        // 表示
+        el.classList.add('ytr-toast--show');
+
+        // 既存タイマーがあれば消して再スタート
+        if (el._ytrHideTimerId) {
+            clearTimeout(el._ytrHideTimerId);
+        }
+
+        el._ytrHideTimerId = setTimeout(() => {
+            el.classList.remove('ytr-toast--show');
+            el._ytrHideTimerId = null;
+        }, TOAST_DURATION_MS);
+    };
+
     const resetToZeroSafely = async (reason) => {
         const url = location.href;
 
@@ -52,36 +89,37 @@
         lastHandledUrl = url;
         log('handle', { url, reason });
 
-        // video要素の生成待ち（最大10秒）
         const video = await waitForVideoElement(10000);
         if (!video) {
             log('video not found', { url, reason });
             return;
         }
 
-        // 0秒に戻す処理は、YouTube側の初期化と競合することがあるため
-        // loadedmetadata / playing のタイミングでも保険で叩く
+        let toastShown = false;
+
         const tryReset = (tag) => {
             try {
-                // currentTimeはメタデータ読み込み後の方が確実に効く
                 video.currentTime = 0;
                 log('reset currentTime=0', { tag });
+
+                // 初回成功時のみトースト
+                if (!toastShown) {
+                    toastShown = true;
+                    showToast('実行完了しました');
+                }
             } catch (e) {
                 log('reset failed', { tag, e });
             }
         };
 
-        // 1) すぐ試す
         tryReset('immediate');
 
-        // 2) メタデータ読み込み時
         const onLoadedMetadata = () => {
             tryReset('loadedmetadata');
             video.removeEventListener('loadedmetadata', onLoadedMetadata);
         };
         video.addEventListener('loadedmetadata', onLoadedMetadata);
 
-        // 3) 再生開始時（自動再生が先に走るケースの保険）
         const onPlaying = () => {
             tryReset('playing');
             video.removeEventListener('playing', onPlaying);
@@ -119,7 +157,6 @@
     };
 
     const hookYouTubeNavigateEvent = () => {
-        // YouTubeのSPA遷移完了イベント（watch遷移でも発火）
         window.addEventListener('yt-navigate-finish', () => {
             scheduleHandle('yt-navigate-finish');
         });
@@ -127,7 +164,6 @@
 
     const observeDomForVideoSwap = () => {
         const observer = new MutationObserver(() => {
-            // videoが差し替わった / watchに入ったのにイベントが拾えなかった時の保険
             scheduleHandle('mutation');
         });
 
@@ -137,11 +173,9 @@
         });
     };
 
-    // 初期化
     hookHistoryApi();
     hookYouTubeNavigateEvent();
     observeDomForVideoSwap();
 
-    // 初回ロード時
     scheduleHandle('initial');
 })();

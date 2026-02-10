@@ -1,0 +1,26 @@
+.ytr-toast {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 2147483647;
+
+    padding: 10px 14px;
+    border-radius: 10px;
+
+    background: rgba(20, 20, 20, 0.92);
+    color: #ffffff;
+
+    font-size: 14px;
+    line-height: 1.2;
+
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+
+    opacity: 0;
+    transform: translateY(-6px);
+    transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.ytr-toast.ytr-toast--show {
+    opacity: 1;
+    transform: translateY(0);
+}

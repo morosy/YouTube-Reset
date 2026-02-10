@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
-    "name": "YouTube Always Start at 0:00",
-    "version": "1.0.0",
+    "name": "YouTube Reset",
+    "version": "1.1.0",
     "description": "YouTubeの動画を必ず0:00から再生します",
     "permissions": [],
     "host_permissions": [
@@ -14,6 +14,9 @@
             ],
             "js": [
                 "content.js"
+            ],
+            "css": [
+                "toast.css"
             ],
             "run_at": "document_start"
         }

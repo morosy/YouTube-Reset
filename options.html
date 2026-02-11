@@ -25,73 +25,82 @@
             </div>
         </div>
 
-        <div class="card">
-            <div class="row">
-                <div class="label">
-                    ポップアップ表示
-                    <div class="hint">処理完了時にポップアップを表示します</div>
+        <div id="settingsBody">
+            <div class="card">
+                <div class="row">
+                    <div class="label">
+                        ポップアップ表示
+                        <div class="hint">処理完了時にポップアップを表示します</div>
+                    </div>
+
+                    <label class="switch">
+                        <input id="showToast" type="checkbox">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div id="toastDetails" class="card">
+                <h2 class="section-title">詳細設定</h2>
+
+                <div class="field field-center">
+                    <div class="field-label">ポップアップの位置</div>
+                    <select id="toastPosition" class="select select-center">
+                        <option value="left">左上</option>
+                        <option value="center">中央</option>
+                        <option value="right">右上</option>
+                    </select>
                 </div>
 
-                <label class="switch">
-                    <input id="showToast" type="checkbox">
-                    <span class="slider"></span>
-                </label>
+                <div class="field field-center">
+                    <div class="field-label">ポップアップの大きさ</div>
+                    <div class="range-row range-row-center">
+                        <input id="toastScale" class="range" type="range" min="0.8" max="1.5" step="0.05">
+                        <div id="toastScaleValue" class="range-value"></div>
+                    </div>
+                </div>
+
+                <div class="field field-center">
+                    <div class="field-label">表示時間（1s～10s）</div>
+                    <div class="range-row range-row-center">
+                        <input id="toastDuration" class="range" type="range" min="1" max="10" step="1">
+                        <input id="toastDurationInput" class="number" type="number" min="1" max="10" step="1">
+                    </div>
+                </div>
+
+                <div class="field field-center">
+                    <div class="field-label">ポップアップの色</div>
+
+                    <div class="color-block color-block-center">
+                        <div class="color-title">バックグラウンド</div>
+                        <div id="bgPresets" class="preset-row preset-row-center" aria-label="背景色テンプレ"></div>
+
+                        <div class="picker-row picker-row-center">
+                            <input id="toastBgColor" class="color-input" type="color" aria-label="背景色カラーピッカー">
+                            <div id="toastBgColorValue" class="color-value"></div>
+                        </div>
+                    </div>
+
+                    <div class="color-block color-block-center">
+                        <div class="color-title">フォントカラー</div>
+                        <div id="fgPresets" class="preset-row preset-row-center" aria-label="文字色テンプレ"></div>
+
+                        <div class="picker-row picker-row-center">
+                            <input id="toastTextColor" class="color-input" type="color" aria-label="文字色カラーピッカー">
+                            <div id="toastTextColorValue" class="color-value"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="previewToast" class="primary-btn" type="button">プレビュー</button>
             </div>
         </div>
 
-        <div id="toastDetails" class="card">
-            <h2 class="section-title">詳細設定</h2>
-
-            <div class="field">
-                <div class="field-label">ポップアップの位置</div>
-                <select id="toastPosition" class="select">
-                    <option value="left">左上</option>
-                    <option value="center">中央</option>
-                    <option value="right">右上</option>
-                </select>
+        <div class="card card-save">
+            <div class="save-row">
+                <button id="saveSettings" class="save-btn" type="button">設定を保存</button>
+                <span id="unsavedDot" class="unsaved-dot" aria-label="未保存" title="未保存"></span>
             </div>
-
-            <div class="field">
-                <div class="field-label">ポップアップの大きさ</div>
-                <div class="range-row">
-                    <input id="toastScale" class="range" type="range" min="0.8" max="1.5" step="0.05">
-                    <div id="toastScaleValue" class="range-value"></div>
-                </div>
-            </div>
-
-            <div class="field">
-                <div class="field-label">表示時間（1s～10s）</div>
-                <div class="range-row">
-                    <input id="toastDuration" class="range" type="range" min="1" max="10" step="1">
-                    <input id="toastDurationInput" class="number" type="number" min="1" max="10" step="1">
-                </div>
-            </div>
-
-            <div class="field">
-                <div class="field-label">ポップアップの色</div>
-
-                <div class="color-block">
-                    <div class="color-title">バックグラウンド</div>
-                    <div id="bgPresets" class="preset-row" aria-label="背景色テンプレ"></div>
-
-                    <div class="picker-row">
-                        <input id="toastBgColor" class="color-input" type="color" aria-label="背景色カラーピッカー">
-                        <div id="toastBgColorValue" class="color-value"></div>
-                    </div>
-                </div>
-
-                <div class="color-block">
-                    <div class="color-title">フォントカラー</div>
-                    <div id="fgPresets" class="preset-row" aria-label="文字色テンプレ"></div>
-
-                    <div class="picker-row">
-                        <input id="toastTextColor" class="color-input" type="color" aria-label="文字色カラーピッカー">
-                        <div id="toastTextColorValue" class="color-value"></div>
-                    </div>
-                </div>
-            </div>
-
-            <button id="previewToast" class="primary-btn" type="button">プレビュー</button>
         </div>
     </div>
 

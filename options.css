@@ -30,10 +30,15 @@ body {
     margin-bottom: 12px;
 }
 
+.card-save {
+    padding: 12px 14px;
+}
+
 .section-title {
     font-size: 16px;
     font-weight: 800;
     margin: 6px 0 12px 0;
+    text-align: center;
 }
 
 .row {
@@ -65,6 +70,10 @@ body {
     margin-bottom: 6px;
 }
 
+.field-center {
+    text-align: center;
+}
+
 .select {
     width: 100%;
     padding: 10px 10px;
@@ -74,14 +83,24 @@ body {
     font-size: 14px;
 }
 
+.select-center {
+    width: 240px;
+    display: inline-block;
+}
+
 .range-row {
     display: flex;
     align-items: center;
     gap: 10px;
 }
 
+.range-row-center {
+    justify-content: center;
+}
+
 .range {
     width: 100%;
+    max-width: 360px;
 }
 
 .range-value {
@@ -114,6 +133,43 @@ body {
 
 .primary-btn:hover {
     filter: brightness(0.98);
+}
+
+/* Save */
+.save-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.save-btn {
+    width: 100%;
+    max-width: 520px;
+    padding: 12px 12px;
+    border-radius: 12px;
+    border: none;
+    background: #111111;
+    color: #ffffff;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.save-btn:hover {
+    filter: brightness(1.04);
+}
+
+.unsaved-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    background: #ef4444;
+    display: none;
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15);
+}
+
+.unsaved-dot.is-visible {
+    display: inline-block;
 }
 
 /* Switch */
@@ -170,10 +226,15 @@ body {
     background: rgba(0, 0, 0, 0.02);
 }
 
+.color-block-center {
+    text-align: center;
+}
+
 .color-title {
     font-size: 12px;
     font-weight: 800;
     margin-bottom: 8px;
+    text-align: center;
 }
 
 .preset-row {
@@ -181,6 +242,10 @@ body {
     gap: 8px;
     flex-wrap: wrap;
     margin-bottom: 10px;
+}
+
+.preset-row-center {
+    justify-content: center;
 }
 
 .preset-btn {
@@ -204,6 +269,10 @@ body {
     gap: 10px;
 }
 
+.picker-row-center {
+    justify-content: center;
+}
+
 .color-input {
     width: 52px;
     height: 36px;
@@ -218,4 +287,10 @@ body {
     font-size: 12px;
     color: rgba(0, 0, 0, 0.75);
     font-variant-numeric: tabular-nums;
+}
+
+/* Enabled OFF のとき，トグル以下を薄く表示 */
+#settingsBody.is-disabled-look {
+    opacity: 0.38;
+    filter: grayscale(0.15);
 }

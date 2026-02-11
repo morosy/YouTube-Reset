@@ -4,11 +4,11 @@
     const DEFAULTS = {
         enabled: true,
         showToast: true,
-        toastPosition: 'center',     // left | center | right
-        toastScale: 1.0,             // 0.8 - 1.5
-        toastDurationMs: 2000,       // 1000 - 10000
-        toastBgColor: '#141414',     // background color
-        toastTextColor: '#ffffff'    // text color
+        toastPosition: 'center',
+        toastScale: 1.0,
+        toastDurationMs: 2000,
+        toastBgColor: '#141414',
+        toastTextColor: '#ffffff'
     };
 
     const BG_PRESETS = [
@@ -31,6 +31,8 @@
 
     const els = {
         enabled: document.getElementById('enabled'),
+        settingsBody: document.getElementById('settingsBody'),
+
         showToast: document.getElementById('showToast'),
         toastDetails: document.getElementById('toastDetails'),
 
@@ -48,12 +50,16 @@
         toastBgColorValue: document.getElementById('toastBgColorValue'),
         toastTextColorValue: document.getElementById('toastTextColorValue'),
 
-        previewToast: document.getElementById('previewToast')
+        previewToast: document.getElementById('previewToast'),
+        saveSettings: document.getElementById('saveSettings'),
+        unsavedDot: document.getElementById('unsavedDot')
     };
 
     let saveToastTimerId = null;
-    let saveToastCooldownId = null;
-    let canShowSaveToast = true;
+
+    // ロード直後は未保存ではない
+    let hasLoaded = false;
+    let isDirty = false;
 
     const clampInt = (v, min, max) => {
         const n = Number.parseInt(v, 10);
@@ -69,6 +75,34 @@
             return min;
         }
         return Math.min(max, Math.max(min, n));
+    };
+
+    const isValidHexColor = (value) => {
+        return typeof value === 'string' && /^#[0-9a-fA-F]{6}$/.test(value);
+    };
+
+    const setDirty = (dirty) => {
+        isDirty = dirty;
+
+        if (!hasLoaded) {
+            els.unsavedDot.classList.remove('is-visible');
+            return;
+        }
+
+        if (isDirty) {
+            els.unsavedDot.classList.add('is-visible');
+            return;
+        }
+
+        els.unsavedDot.classList.remove('is-visible');
+    };
+
+    const updateEnabledLook = () => {
+        if (!els.enabled.checked) {
+            els.settingsBody.classList.add('is-disabled-look');
+            return;
+        }
+        els.settingsBody.classList.remove('is-disabled-look');
     };
 
     const updateDetailsVisibility = () => {
@@ -96,13 +130,11 @@
         el.setAttribute('role', 'status');
         el.setAttribute('aria-live', 'polite');
 
-        // 設定保存通知は設定に関わらず「中央上部」
         el.style.left = '50%';
         el.style.right = 'auto';
         el.style.setProperty('--ytr-x', '-50%');
         el.style.setProperty('--ytr-scale', '1');
 
-        // 固定配色（見やすさ優先）
         el.style.setProperty('--ytr-bg', 'rgba(20, 20, 20, 0.92)');
         el.style.setProperty('--ytr-fg', '#ffffff');
 
@@ -111,11 +143,6 @@
     };
 
     const showSaveToast = () => {
-        if (!canShowSaveToast) {
-            return;
-        }
-        canShowSaveToast = false;
-
         const el = ensureSaveToastElement();
         el.textContent = '設定を保存しました';
         el.classList.add('ytr-toast--show');
@@ -128,15 +155,6 @@
             el.classList.remove('ytr-toast--show');
             saveToastTimerId = null;
         }, 1400);
-
-        if (saveToastCooldownId !== null) {
-            clearTimeout(saveToastCooldownId);
-        }
-
-        saveToastCooldownId = window.setTimeout(() => {
-            canShowSaveToast = true;
-            saveToastCooldownId = null;
-        }, 800);
     };
 
     const renderPresetButtons = (containerEl, colors, onPick) => {
@@ -157,55 +175,21 @@
         }
     };
 
-    const load = async () => {
-        const data = await chrome.storage.sync.get(DEFAULTS);
-
-        els.enabled.checked = data.enabled;
-        els.showToast.checked = data.showToast;
-
-        els.toastPosition.value = data.toastPosition;
-
-        els.toastScale.value = String(clampFloat(data.toastScale, 0.8, 1.5));
-        updateScaleLabel();
-
-        const seconds = clampInt(Math.round(clampInt(data.toastDurationMs, 1000, 10000) / 1000), 1, 10);
-        els.toastDuration.value = String(seconds);
-        els.toastDurationInput.value = String(seconds);
-
-        els.toastBgColor.value = (data.toastBgColor || DEFAULTS.toastBgColor);
-        els.toastTextColor.value = (data.toastTextColor || DEFAULTS.toastTextColor);
-        updateColorLabels();
-
-        renderPresetButtons(els.bgPresets, BG_PRESETS, (color) => {
-            els.toastBgColor.value = color;
-            updateColorLabels();
-            save();
-        });
-
-        renderPresetButtons(els.fgPresets, FG_PRESETS, (color) => {
-            els.toastTextColor.value = color;
-            updateColorLabels();
-            save();
-        });
-
-        updateDetailsVisibility();
-    };
-
-    const save = async () => {
+    const collectPayloadFromUi = () => {
         const seconds = clampInt(els.toastDuration.value, 1, 10);
 
-        const payload = {
+        const bg = isValidHexColor(els.toastBgColor.value) ? els.toastBgColor.value : DEFAULTS.toastBgColor;
+        const fg = isValidHexColor(els.toastTextColor.value) ? els.toastTextColor.value : DEFAULTS.toastTextColor;
+
+        return {
             enabled: els.enabled.checked,
             showToast: els.showToast.checked,
             toastPosition: els.toastPosition.value,
             toastScale: clampFloat(els.toastScale.value, 0.8, 1.5),
             toastDurationMs: seconds * 1000,
-            toastBgColor: els.toastBgColor.value,
-            toastTextColor: els.toastTextColor.value
+            toastBgColor: bg,
+            toastTextColor: fg
         };
-
-        await chrome.storage.sync.set(payload);
-        showSaveToast();
     };
 
     const applyDurationInputToRange = () => {
@@ -253,52 +237,99 @@
         }, settings.toastDurationMs);
     };
 
-    els.enabled.addEventListener('change', save);
+    const markDirtyByUserAction = () => {
+        if (!hasLoaded) {
+            return;
+        }
+        setDirty(true);
+    };
+
+    const load = async () => {
+        const data = await chrome.storage.sync.get(DEFAULTS);
+
+        els.enabled.checked = data.enabled;
+        updateEnabledLook();
+
+        els.showToast.checked = data.showToast;
+        updateDetailsVisibility();
+
+        els.toastPosition.value = data.toastPosition;
+
+        els.toastScale.value = String(clampFloat(data.toastScale, 0.8, 1.5));
+        updateScaleLabel();
+
+        const seconds = clampInt(Math.round(clampInt(data.toastDurationMs, 1000, 10000) / 1000), 1, 10);
+        els.toastDuration.value = String(seconds);
+        els.toastDurationInput.value = String(seconds);
+
+        els.toastBgColor.value = isValidHexColor(data.toastBgColor) ? data.toastBgColor : DEFAULTS.toastBgColor;
+        els.toastTextColor.value = isValidHexColor(data.toastTextColor) ? data.toastTextColor : DEFAULTS.toastTextColor;
+        updateColorLabels();
+
+        renderPresetButtons(els.bgPresets, BG_PRESETS, (color) => {
+            els.toastBgColor.value = color;
+            updateColorLabels();
+            markDirtyByUserAction();
+        });
+
+        renderPresetButtons(els.fgPresets, FG_PRESETS, (color) => {
+            els.toastTextColor.value = color;
+            updateColorLabels();
+            markDirtyByUserAction();
+        });
+
+        hasLoaded = true;
+        setDirty(false);
+    };
+
+    // UIイベント：変更時に未保存 표시（保存はボタンのみ）
+    els.enabled.addEventListener('change', () => {
+        updateEnabledLook();
+        markDirtyByUserAction();
+    });
 
     els.showToast.addEventListener('change', () => {
         updateDetailsVisibility();
-        save();
+        markDirtyByUserAction();
     });
 
-    els.toastPosition.addEventListener('change', save);
+    els.toastPosition.addEventListener('change', markDirtyByUserAction);
 
     els.toastScale.addEventListener('input', () => {
         updateScaleLabel();
-        save();
+        markDirtyByUserAction();
     });
 
     els.toastDuration.addEventListener('input', () => {
         applyRangeToDurationInput();
-        save();
+        markDirtyByUserAction();
     });
 
     els.toastDurationInput.addEventListener('input', () => {
         applyDurationInputToRange();
-        save();
+        markDirtyByUserAction();
     });
 
     els.toastBgColor.addEventListener('input', () => {
         updateColorLabels();
-        save();
+        markDirtyByUserAction();
     });
 
     els.toastTextColor.addEventListener('input', () => {
         updateColorLabels();
-        save();
+        markDirtyByUserAction();
     });
 
     els.previewToast.addEventListener('click', () => {
-        const seconds = clampInt(els.toastDuration.value, 1, 10);
+        const payload = collectPayloadFromUi();
+        createPreviewToast(payload);
+    });
 
-        const settings = {
-            toastPosition: els.toastPosition.value,
-            toastScale: clampFloat(els.toastScale.value, 0.8, 1.5),
-            toastDurationMs: seconds * 1000,
-            toastBgColor: els.toastBgColor.value,
-            toastTextColor: els.toastTextColor.value
-        };
-
-        createPreviewToast(settings);
+    els.saveSettings.addEventListener('click', async () => {
+        const payload = collectPayloadFromUi();
+        await chrome.storage.sync.set(payload);
+        showSaveToast();
+        setDirty(false);
     });
 
     load();
